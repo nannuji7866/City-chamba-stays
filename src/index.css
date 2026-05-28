@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap');
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: 20px;
+
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+}
+
+:root {
+  --background: #FFFFFF;
+  --foreground: #1C1C1E;
+  --card: #FFFFFF;
+  --card-foreground: #1C1C1E;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1C1E;
+  --primary: #000000;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F2F2F7;
+  --secondary-foreground: #8E8E93;
+  --muted: #F2F2F7;
+  --muted-foreground: #8E8E93;
+  --accent: #FF385C;
+  --accent-foreground: #FFFFFF;
+  --destructive: #FF3B30;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E5EA;
+  --input: #E5E5EA;
+  --ring: #000000;
+  --radius: 12px;
+  --font-heading: 'Roboto', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+  --font-body: 'Roboto', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #F2F2F7;
+  --card: #1C1C1E;
+  --card-foreground: #F2F2F7;
+  --popover: #1C1C1E;
+  --popover-foreground: #F2F2F7;
+  --primary: #FFFFFF;
+  --primary-foreground: #000000;
+  --secondary: #2C2C2E;
+  --secondary-foreground: #8E8E93;
+  --muted: #2C2C2E;
+  --muted-foreground: #8E8E93;
+  --accent: #FF385C;
+  --accent-foreground: #FFFFFF;
+  --destructive: #FF453A;
+  --destructive-foreground: #FFFFFF;
+  --border: #38383A;
+  --input: #38383A;
+  --ring: #FFFFFF;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .apple-blur {
+    @apply backdrop-blur-xl bg-background/80;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .shadow-apple {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .interactive-tap {
+    @apply active:scale-95 transition-transform duration-200;
+  }
+}
+
+/* Fix for broken images */
+img {
+  text-indent: -9999px;
+  @apply relative;
+}
+
+img:after {
+  content: "";
+  @apply absolute inset-0 bg-secondary block flex items-center justify-center text-xs text-muted-foreground;
+  content: "Image unavailable";
+}
+
+/* Custom Swiss/Apple card spacing */
+.stay-card-radius {
+  border-radius: 20px;
+}
