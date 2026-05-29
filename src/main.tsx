@@ -1,108 +1,49 @@
-import { useCallback, useEffect, useState } from 'react';
-import { Theme } from './settings/types';
-import { ExploreScreen } from './components/generated/ExploreScreen';
-import { SearchResultsScreen } from './components/generated/SearchResultsScreen';
-import { DiscoverMapScreen } from './components/generated/DiscoverMapScreen';
-import { ProfileScreen } from './components/generated/ProfileScreen';
-import { ListingDetailScreen } from './components/generated/ListingDetailScreen';
-import { BookingScreen } from './components/generated/BookingScreen';
-import { TravelAuthScreen } from './components/generated/TravelAuthScreen';
-import { BecomeAHostStep1 } from './components/generated/BecomeAHostStep1';
+import { StrictMode } from 'react';
+import { MotionGlobalConfig } from 'framer-motion';
 
-type RouteName = 'explore' | 'search' | 'discover' | 'profile' | 'property' | 'booking' | 'auth' | 'host';
+// Disable Framer Motion runtime animations for stability.
+MotionGlobalConfig.skipAnimations = true;
 
-let theme: Theme = 'light';
+// Force light mode by removing dark class and preventing it from being added
+document.documentElement.classList.remove('dark');
 
-const getRouteFromHash = (): RouteName => {
-  const hash = window.location.hash.replace(/^#\/?/, '');
-  const route = hash.split('/')[0];
-
-  switch (route) {
-    case 'search':
-    case 'discover':
-    case 'profile':
-    case 'property':
-    case 'booking':
-    case 'auth':
-    case 'host':
-      return route;
-    default:
-      return 'explore';
-  }
+const forceLightMode = () => {
+  document.documentElement.classList.toggle('dark', false);
 };
 
-function App() {
-  const [route, setRoute] = useState<RouteName>(() => getRouteFromHash());
+const addBrokenImageHandler = () => {
+  document.addEventListener('error', function (e) {
+    if (e.target instanceof HTMLImageElement) {
+      const img = e.target;
+      if (!img.dataset.fallbackApplied) {
+        img.dataset.fallbackApplied = 'true';
 
-  function setTheme(theme: Theme) {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+        const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/%3E%3C/svg%3E`;
+        img.src = fallbackSvg;
+        img.classList.add('broken-image-fallback');
+
+        if (!img.alt || img.alt.trim() === '') {
+          img.alt = 'Image not available';
+        }
+      }
     }
-  }
+  }, true);
+};
 
-  useEffect(() => {
-    setTheme(theme);
-  }, []);
+forceLightMode();
+addBrokenImageHandler();
 
-  useEffect(() => {
-    const handleHashChange = () => setRoute(getRouteFromHash());
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+document.addEventListener('DOMContentLoaded', forceLightMode);
 
-  const navigate = useCallback((nextRoute: string) => {
-    window.location.hash = nextRoute;
-    setRoute(getRouteFromHash());
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, []);
+const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+mediaQuery.addEventListener('change', forceLightMode);
 
-  const handleAppClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement;
-    const interactive = target.closest('button, [role="button"], a, img, h3');
-    if (!interactive) return;
+import { createRoot } from 'react-dom/client';
+import './index.css';
+import App from './App.tsx';
 
-    const label = (
-      interactive.textContent ||
-      interactive.getAttribute('aria-label') ||
-      target.getAttribute('alt') ||
-      ''
-    ).toLowerCase();
-
-    if (label.includes('explore')) navigate('/');
-    else if (label.includes('search') || label.includes('where to') || label.includes('filter') || label.includes('see all')) navigate('/search');
-    else if (label.includes('discover') || label.includes('map')) navigate('/discover');
-    else if (label.includes('profile')) navigate('/profile');
-    else if (label.includes('host')) navigate('/host');
-    else if (label.includes('login') || label.includes('sign')) navigate('/auth');
-    else if (label.includes('book') || label.includes('reserve')) navigate('/booking/alpine-woodhouse');
-    else if (interactive.tagName === 'IMG' || interactive.tagName === 'H3') navigate('/property/alpine-woodhouse');
-  }, [navigate]);
-
-  const renderRoute = () => {
-    switch (route) {
-      case 'search':
-        return <SearchResultsScreen />;
-      case 'discover':
-        return <DiscoverMapScreen />;
-      case 'profile':
-        return <ProfileScreen />;
-      case 'property':
-        return <ListingDetailScreen />;
-      case 'booking':
-        return <BookingScreen />;
-      case 'auth':
-        return <TravelAuthScreen />;
-      case 'host':
-        return <BecomeAHostStep1 />;
-      case 'explore':
-      default:
-        return <ExploreScreen />;
-    }
-  };
-
-  return <div onClickCapture={handleAppClick}>{renderRoute()}</div>;
-}
-
-export default App;
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
