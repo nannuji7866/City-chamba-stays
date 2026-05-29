@@ -89,7 +89,31 @@ function App() {
     }
   };
 
-  return <div onClickCapture={handleAppClick}>{renderRoute()}</div>;
+  return (
+  <div
+    onClickCapture={handleAppClick}
+    style={{
+      minHeight: '100vh',
+      background: '#F6FAF8',
+      display: 'flex',
+      justifyContent: 'center',
+    }}
+  >
+    <div
+      style={{
+        width: '100%',
+        maxWidth: '430px',
+        minHeight: '100vh',
+        background: '#FAFFFE',
+        position: 'relative',
+        overflow: 'hidden',
+        boxShadow: '0 0 40px rgba(0,0,0,0.08)',
+      }}
+    >
+      {renderRoute()}
+    </div>
+  </div>
+);
 }
 
 export default App;
