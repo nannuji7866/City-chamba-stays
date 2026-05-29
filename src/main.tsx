@@ -1,59 +1,108 @@
-import { StrictMode } from 'react';
-import { MotionGlobalConfig } from 'framer-motion';
-MotionGlobalConfig.skipAnimations = true;
+import { useCallback, useEffect, useState } from 'react';
+import { Theme } from './settings/types';
+import { ExploreScreen } from './components/generated/ExploreScreen';
+import { SearchResultsScreen } from './components/generated/SearchResultsScreen';
+import { DiscoverMapScreen } from './components/generated/DiscoverMapScreen';
+import { ProfileScreen } from './components/generated/ProfileScreen';
+import { ListingDetailScreen } from './components/generated/ListingDetailScreen';
+import { BookingScreen } from './components/generated/BookingScreen';
+import { TravelAuthScreen } from './components/generated/TravelAuthScreen';
+import { BecomeAHostStep1 } from './components/generated/BecomeAHostStep1';
 
-// Check if we should skip animations based on URL parameters
-const urlParams = new URLSearchParams(window.location.search);
-const shouldSkipAnimations = urlParams.get('shouldSkipAnimations') === 'true';
-const mode = urlParams.get('mode');
-const isEditableMode = mode === 'editable';
+type RouteName = 'explore' | 'search' | 'discover' | 'profile' | 'property' | 'booking' | 'auth' | 'host';
 
-// Disable animations for editable mode or when explicitly requested
-if (shouldSkipAnimations || isEditableMode) {
-  MotionGlobalConfig.skipAnimations = true;
+let theme: Theme = 'light';
+
+const getRouteFromHash = (): RouteName => {
+  const hash = window.location.hash.replace(/^#\/?/, '');
+  const route = hash.split('/')[0];
+
+  switch (route) {
+    case 'search':
+    case 'discover':
+    case 'profile':
+    case 'property':
+    case 'booking':
+    case 'auth':
+    case 'host':
+      return route;
+    default:
+      return 'explore';
+  }
+};
+
+function App() {
+  const [route, setRoute] = useState<RouteName>(() => getRouteFromHash());
+
+  function setTheme(theme: Theme) {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+
+  useEffect(() => {
+    setTheme(theme);
+  }, []);
+
+  useEffect(() => {
+    const handleHashChange = () => setRoute(getRouteFromHash());
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const navigate = useCallback((nextRoute: string) => {
+    window.location.hash = nextRoute;
+    setRoute(getRouteFromHash());
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  const handleAppClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    const interactive = target.closest('button, [role="button"], a, img, h3');
+    if (!interactive) return;
+
+    const label = (
+      interactive.textContent ||
+      interactive.getAttribute('aria-label') ||
+      target.getAttribute('alt') ||
+      ''
+    ).toLowerCase();
+
+    if (label.includes('explore')) navigate('/');
+    else if (label.includes('search') || label.includes('where to') || label.includes('filter') || label.includes('see all')) navigate('/search');
+    else if (label.includes('discover') || label.includes('map')) navigate('/discover');
+    else if (label.includes('profile')) navigate('/profile');
+    else if (label.includes('host')) navigate('/host');
+    else if (label.includes('login') || label.includes('sign')) navigate('/auth');
+    else if (label.includes('book') || label.includes('reserve')) navigate('/booking/alpine-woodhouse');
+    else if (interactive.tagName === 'IMG' || interactive.tagName === 'H3') navigate('/property/alpine-woodhouse');
+  }, [navigate]);
+
+  const renderRoute = () => {
+    switch (route) {
+      case 'search':
+        return <SearchResultsScreen />;
+      case 'discover':
+        return <DiscoverMapScreen />;
+      case 'profile':
+        return <ProfileScreen />;
+      case 'property':
+        return <ListingDetailScreen />;
+      case 'booking':
+        return <BookingScreen />;
+      case 'auth':
+        return <TravelAuthScreen />;
+      case 'host':
+        return <BecomeAHostStep1 />;
+      case 'explore':
+      default:
+        return <ExploreScreen />;
+    }
+  };
+
+  return <div onClickCapture={handleAppClick}>{renderRoute()}</div>;
 }
 
-// Force light mode by removing dark class and preventing it from being added
-document.documentElement.classList.remove('dark');
-
-// Override the system preference detection
-const forceLightMode = () => {
-  // Always set dark mode to false regardless of localStorage or system preference
-  document.documentElement.classList.toggle('dark', false // Force to false instead of checking localStorage or system preference
-  );
-};
-const addBrokenImageHandler = () => {
-  document.addEventListener('error', function (e) {
-    if (e.target instanceof HTMLImageElement) {
-      const img = e.target;
-      if (!img.dataset.fallbackApplied) {
-        img.dataset.fallbackApplied = 'true';
-
-        // Create a simple fallback SVG icon as data URL
-        const fallbackSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2' ry='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/%3E%3C/svg%3E`;
-        img.src = fallbackSvg;
-        img.classList.add('broken-image-fallback');
-        if (!img.alt || img.alt.trim() === '') {
-          img.alt = 'Image not available';
-        }
-      }
-    }
-  }, true);
-};
-
-// Run immediately
-forceLightMode();
-addBrokenImageHandler();
-
-// Also run when the DOM is loaded to ensure it applies
-document.addEventListener('DOMContentLoaded', forceLightMode);
-
-// Override system preference changes
-const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-mediaQuery.addEventListener('change', forceLightMode);
-import { createRoot } from 'react-dom/client';
-import './index.css';
-import App from './App.tsx';
-createRoot(document.getElementById('root')!).render(<StrictMode>
-    <App />
-  </StrictMode>);
+export default App;
