@@ -2,8 +2,7 @@ import * as React from "react";
 import { ChevronLeft, Star, MapPin, Search, Compass, User, SlidersHorizontal, Heart, Navigation } from "lucide-react";
 import { motion, AnimatePresence, useAnimation, useMotionValue, useTransform, animate } from "framer-motion";
 import { cn } from "@/lib/utils";
-import contextImage1 from "@/assets/magicpath/context/01-context-image-1-a4a8ab3a4409.png";
-
+const contextImage1 = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop";
 /* ─────────────────────────────────────────────────────────────
    Types & Static Data
 ───────────────────────────────────────────────────────────── */
