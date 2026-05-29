@@ -1,5 +1,6 @@
 import { StrictMode } from 'react';
 import { MotionGlobalConfig } from 'framer-motion';
+MotionGlobalConfig.skipAnimations = true;
 
 // Check if we should skip animations based on URL parameters
 const urlParams = new URLSearchParams(window.location.search);
