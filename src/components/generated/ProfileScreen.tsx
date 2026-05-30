@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, Bell, LogOut, Settings, CreditCard, ShieldCheck, History, Moon, UserCog, MessageCircle, BadgeCheck, Lock, Star, Zap, Trophy, Heart, MapPin, Globe, Shield, Award, Gem } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { ConnectedAuthScreen } from '@/components/auth/ConnectedAuthScreen';
+
 const FONT = "'Roboto', -apple-system, sans-serif";
 const XP_CURRENT = 3400;
 const XP_NEXT_LEVEL = 5000;
@@ -99,7 +102,7 @@ const BADGES_DATA = [{
 }];
 const GREETINGS = ['Ready for your next adventure? 🌍', 'Where to next? The world awaits! 🗺️', 'Your wanderlust is showing! ✨'];
 
-// ─── Ripple Hook ──────────────────────────────────────────────────────────────
+// ─── Ripple Hook ────────────────────────────────────────────────────────────
 interface RippleState {
   id: number;
   x: number;
@@ -123,7 +126,7 @@ function useRipple() {
   };
 }
 
-// ─── Count Up Hook ────────────────────────────────────────────────────────────
+// ─── Count Up Hook ────────────────────────────────────────────────────────
 function useCountUp(target: number, duration = 1200) {
   const [val, setVal] = useState(0);
   useEffect(() => {
@@ -144,7 +147,7 @@ function useCountUp(target: number, duration = 1200) {
   return Math.round(val).toString();
 }
 
-// ─── XP Ring ──────────────────────────────────────────────────────────────────
+// ─── XP Ring ──────────────────────────────────────────────────────────
 interface XpRingProps {
   size: number;
   stroke: number;
@@ -185,12 +188,12 @@ const XpRing: React.FC<XpRingProps> = ({
       </defs>
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)'} strokeWidth={stroke} />
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={`url(#${id})`} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} filter="url(#xpGlow)" style={{
-      transition: 'stroke-dashoffset 1.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
-    }} />
+        transition: 'stroke-dashoffset 1.6s cubic-bezier(0.34, 1.56, 0.64, 1)'
+      }} />
     </svg>;
 };
 
-// ─── Flame Icon ───────────────────────────────────────────────────────────────
+// ─── Flame Icon ─────────────────────────────────────────────────────────
 const FlameIcon: React.FC<{
   size?: number;
 }> = ({
@@ -215,7 +218,7 @@ const FlameIcon: React.FC<{
     <path d="M16 17C16 17 14.5 19 14.5 20.5C14.5 21.9 15.2 23 16 23C16.8 23 17.5 21.9 17.5 20.5C17.5 19 16 17 16 17Z" fill="url(#flameInner)" />
   </svg>;
 
-// ─── Streak Counter ───────────────────────────────────────────────────────────
+// ─── Streak Counter ───────────────────────────────────────────────────────
 interface StreakCounterProps {
   isDark: boolean;
 }
@@ -320,7 +323,7 @@ const StreakCounter: React.FC<StreakCounterProps> = ({
     </motion.div>;
 };
 
-// ─── XP Progress Bar ──────────────────────────────────────────────────────────
+// ─── XP Progress Bar ───────────────────────────────────────────────────────
 interface XpBarProps {
   isDark: boolean;
 }
@@ -427,7 +430,7 @@ const XpBar: React.FC<XpBarProps> = ({
     </motion.div>;
 };
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// ─── Stat Card ─────────────────────────────────────────────────────────
 interface StatCardProps {
   stat: typeof STATS_DATA[0];
   index: number;
@@ -516,7 +519,7 @@ const StatCard: React.FC<StatCardProps> = ({
     </motion.button>;
 };
 
-// ─── Achievement Badge ────────────────────────────────────────────────────────
+// ─── Achievement Badge ──────────────────────────────────────────────────────
 interface BadgeCardProps {
   badge: typeof BADGES_DATA[0];
   delay: number;
@@ -677,7 +680,7 @@ const BadgeCard: React.FC<BadgeCardProps> = ({
     </div>;
 };
 
-// ─── Setting Item ─────────────────────────────────────────────────────────────
+// ─── Setting Item ────────────────────────────────────────────────────────
 interface SettingItemProps {
   item: typeof SETTINGS_LIST[0];
   isDark: boolean;
@@ -772,7 +775,7 @@ const SettingItem: React.FC<SettingItemProps> = ({
     </motion.div>;
 };
 
-// ─── Dark Mode Toggle ─────────────────────────────────────────────────────────
+// ─── Dark Mode Toggle ───────────────────────────────────────────────────────
 interface DarkModeToggleProps {
   isDark: boolean;
   onToggle: () => void;
@@ -864,7 +867,7 @@ const DarkModeToggle: React.FC<DarkModeToggleProps> = ({
     </motion.div>;
 };
 
-// ─── Level Badge ──────────────────────────────────────────────────────────────
+// ─── Level Badge ────────────────────────────────────────────────────────
 const LevelBadge: React.FC<{
   isDark: boolean;
 }> = ({
@@ -902,11 +905,18 @@ const LevelBadge: React.FC<{
     Explorer Lv.5 🏡
   </motion.div>;
 
-// ─── Main Screen ──────────────────────────────────────────────────────────────
+// ─── Main Screen ────────────────────────────────────────────────────────────
 export const ProfileScreen: React.FC = () => {
+  const { session, user, signOut } = useAuth();
   const [isDark, setIsDark] = useState(false);
   const [editRipples, setEditRipples] = useState<RippleState[]>([]);
   const [greeting] = useState(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)]);
+
+  // If not authenticated, show auth screen
+  if (!session || !user) {
+    return <ConnectedAuthScreen onAuthenticated={() => window.location.hash = '/profile'} />;
+  }
+
   const screenBg = isDark ? '#0A0A0A' : '#F6F6F8';
   const primaryText = isDark ? '#FFFFFF' : '#1C1C1E';
   const secondaryText = isDark ? '#636366' : '#8E8E93';
@@ -916,6 +926,7 @@ export const ProfileScreen: React.FC = () => {
   const versionColor = isDark ? '#48484A' : '#C7C7CC';
   const sectionBg = isDark ? 'rgba(28,28,30,0.6)' : 'rgba(242,242,247,0.5)';
   const sectionBorder = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
   const triggerEditRipple = useCallback((e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const id = Date.now();
@@ -926,6 +937,17 @@ export const ProfileScreen: React.FC = () => {
     }]);
     setTimeout(() => setEditRipples(prev => prev.filter(r => r.id !== id)), 700);
   }, []);
+
+  // Extract user display name from email or user metadata
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'User';
+  const userEmail = user.email || '';
+  const userAvatar = user.user_metadata?.avatar_url || `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160`;
+
+  const handleLogout = async () => {
+    await signOut();
+    window.location.hash = '/auth';
+  };
+
   return <div style={{
     minHeight: '100vh',
     background: screenBg,
@@ -964,138 +986,138 @@ export const ProfileScreen: React.FC = () => {
 
       {/* ── HEADER ── */}
       <header style={{
-      background: headerBg,
-      padding: '60px 24px 28px',
-      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#EBEBEB'}`,
-      transition: 'background 0.3s ease, border-color 0.3s ease'
-    }}>
-        <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start'
+        background: headerBg,
+        padding: '60px 24px 28px',
+        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : '#EBEBEB'}`,
+        transition: 'background 0.3s ease, border-color 0.3s ease'
       }}>
-
-          {/* LEFT: Name + greeting */}
-          <div style={{
+        <div style={{
           display: 'flex',
-          flexDirection: 'column',
-          flex: 1
+          justifyContent: 'space-between',
+          alignItems: 'flex-start'
         }}>
-            <motion.div initial={{
-            opacity: 0,
-            y: -4
-          }} animate={{
-            opacity: 1,
-            y: 0
-          }} transition={{
-            delay: 0.16
-          }} style={{
+
+          {/* LEFT: Real user name + greeting */}
+          <div style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: '6px'
+            flexDirection: 'column',
+            flex: 1
           }}>
-              <h1 style={{
-              fontFamily: FONT,
-              fontSize: '28px',
-              fontWeight: 800,
-              letterSpacing: '-0.8px',
-              lineHeight: 1.05,
-              color: primaryText,
-              transition: 'color 0.3s ease'
+            <motion.div initial={{
+              opacity: 0,
+              y: -4
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              delay: 0.16
+            }} style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}>
-                Lukas
+              <h1 style={{
+                fontFamily: FONT,
+                fontSize: '28px',
+                fontWeight: 800,
+                letterSpacing: '-0.8px',
+                lineHeight: 1.05,
+                color: primaryText,
+                transition: 'color 0.3s ease'
+              }}>
+                {userName}
               </h1>
               <BadgeCheck size={18} strokeWidth={2} style={{
-              color: '#FF385C',
-              flexShrink: 0,
-              marginTop: '2px'
-            }} />
+                color: '#FF385C',
+                flexShrink: 0,
+                marginTop: '2px'
+              }} />
             </motion.div>
             <motion.p initial={{
-            opacity: 0
-          }} animate={{
-            opacity: 1
-          }} transition={{
-            delay: 0.24
-          }} style={{
-            fontFamily: FONT,
-            fontSize: '13px',
-            fontWeight: 400,
-            color: secondaryText,
-            marginTop: '2px',
-            transition: 'color 0.3s ease'
-          }}>
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} transition={{
+              delay: 0.24
+            }} style={{
+              fontFamily: FONT,
+              fontSize: '13px',
+              fontWeight: 400,
+              color: secondaryText,
+              marginTop: '2px',
+              transition: 'color 0.3s ease'
+            }}>
               {greeting}
             </motion.p>
           </div>
 
-          {/* RIGHT: Avatar with XP ring */}
+          {/* RIGHT: Real user avatar with XP ring */}
           <motion.div initial={{
-          opacity: 0,
-          scale: 0.8
-        }} animate={{
-          opacity: 1,
-          scale: 1
-        }} transition={{
-          duration: 0.55,
-          delay: 0.18,
-          type: 'spring',
-          stiffness: 220,
-          damping: 16
-        }} style={{
-          position: 'relative',
-          flexShrink: 0,
-          marginLeft: '16px',
-          marginTop: '18px'
-        }}>
+            opacity: 0,
+            scale: 0.8
+          }} animate={{
+            opacity: 1,
+            scale: 1
+          }} transition={{
+            duration: 0.55,
+            delay: 0.18,
+            type: 'spring',
+            stiffness: 220,
+            damping: 16
+          }} style={{
+            position: 'relative',
+            flexShrink: 0,
+            marginLeft: '16px',
+            marginTop: '18px'
+          }}>
             <XpRing size={96} stroke={4} progress={XP_PROGRESS} isDark={isDark} />
             <div className="avatar-breathe" style={{
-            width: '80px',
-            height: '80px',
-            borderRadius: '50%',
-            overflow: 'hidden',
-            margin: '4px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.18)'
-          }}>
-              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160" alt="Profile photo of Lukas" style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover'
-            }} />
+              width: '80px',
+              height: '80px',
+              borderRadius: '50%',
+              overflow: 'hidden',
+              margin: '4px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.18)'
+            }}>
+              <img src={userAvatar} alt={`Profile photo of ${userName}`} style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover'
+              }} />
             </div>
             <LevelBadge isDark={isDark} />
 
             {/* Edit button */}
             <motion.button whileTap={{
-            scale: 0.82
-          }} onClick={triggerEditRipple} aria-label="Edit profile" style={{
-            position: 'absolute',
-            bottom: '-2px',
-            right: '-2px',
-            background: isDark ? '#FFFFFF' : '#1C1C1E',
-            color: isDark ? '#000000' : '#FFFFFF',
-            padding: '6px',
-            borderRadius: '50%',
-            border: `2px solid ${isDark ? '#111111' : '#FFFFFF'}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            overflow: 'hidden',
-            transition: 'background 0.3s ease'
-          }}>
-              {editRipples.map(r => <span key={r.id} style={{
+              scale: 0.82
+            }} onClick={triggerEditRipple} aria-label="Edit profile" style={{
               position: 'absolute',
+              bottom: '-2px',
+              right: '-2px',
+              background: isDark ? '#FFFFFF' : '#1C1C1E',
+              color: isDark ? '#000000' : '#FFFFFF',
+              padding: '6px',
               borderRadius: '50%',
-              background: 'rgba(255,255,255,0.45)',
-              width: '60px',
-              height: '60px',
-              top: r.y - 30,
-              left: r.x - 30,
-              transform: 'scale(0)',
-              animation: 'rippleOut 0.6s ease-out forwards',
-              pointerEvents: 'none'
-            }} />)}
+              border: `2px solid ${isDark ? '#111111' : '#FFFFFF'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              overflow: 'hidden',
+              transition: 'background 0.3s ease'
+            }}>
+              {editRipples.map(r => <span key={r.id} style={{
+                position: 'absolute',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.45)',
+                width: '60px',
+                height: '60px',
+                top: r.y - 30,
+                left: r.x - 30,
+                transform: 'scale(0)',
+                animation: 'rippleOut 0.6s ease-out forwards',
+                pointerEvents: 'none'
+              }} />)}
               <Settings size={13} strokeWidth={1.8} />
             </motion.button>
           </motion.div>
@@ -1103,83 +1125,83 @@ export const ProfileScreen: React.FC = () => {
 
         {/* XP Bar */}
         <div style={{
-        marginTop: '32px'
-      }}>
+          marginTop: '32px'
+        }}>
           <XpBar isDark={isDark} />
         </div>
 
         {/* Streak */}
         <div style={{
-        marginTop: '14px'
-      }}>
+          marginTop: '14px'
+        }}>
           <StreakCounter isDark={isDark} />
         </div>
 
         {/* Stats Row */}
         <motion.div initial={{
-        opacity: 0,
-        y: 8
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} transition={{
-        delay: 0.42,
-        duration: 0.45
-      }} style={{
-        marginTop: '14px',
-        display: 'flex',
-        gap: '10px'
-      }}>
+          opacity: 0,
+          y: 8
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.42,
+          duration: 0.45
+        }} style={{
+          marginTop: '14px',
+          display: 'flex',
+          gap: '10px'
+        }}>
           {STATS_DATA.map((stat, i) => <StatCard key={stat.id} stat={stat} index={i} isDark={isDark} />)}
         </motion.div>
       </header>
 
       <main style={{
-      padding: '28px 20px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '40px'
-    }}>
+        padding: '28px 20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '40px'
+      }}>
 
         {/* ── ACHIEVEMENT BADGES ── */}
         <section>
           <motion.div initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 0.5
-        }} style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-            <h2 style={{
-            fontFamily: FONT,
-            fontSize: '17px',
-            fontWeight: 700,
-            letterSpacing: '-0.3px',
-            color: primaryText
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            delay: 0.5
+          }} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
           }}>
+            <h2 style={{
+              fontFamily: FONT,
+              fontSize: '17px',
+              fontWeight: 700,
+              letterSpacing: '-0.3px',
+              color: primaryText
+            }}>
               Achievements 🏅
             </h2>
             <span style={{
-            fontFamily: FONT,
-            fontSize: '12px',
-            fontWeight: 500,
-            color: '#FF385C'
-          }}>
+              fontFamily: FONT,
+              fontSize: '12px',
+              fontWeight: 500,
+              color: '#FF385C'
+            }}>
               3/5 earned
             </span>
           </motion.div>
           <div style={{
-          display: 'flex',
-          gap: '10px',
-          overflowX: 'auto',
-          paddingBottom: '8px',
-          paddingTop: '4px'
-        }} className="hide-scrollbar">
+            display: 'flex',
+            gap: '10px',
+            overflowX: 'auto',
+            paddingBottom: '8px',
+            paddingTop: '4px'
+          }} className="hide-scrollbar">
             {BADGES_DATA.map((badge, i) => <BadgeCard key={badge.id} badge={badge} delay={0.52 + i * 0.1} />)}
           </div>
         </section>
@@ -1187,166 +1209,166 @@ export const ProfileScreen: React.FC = () => {
         {/* ── YOUR TRIPS ── */}
         <section>
           <motion.div initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 0.5
-        }} style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '16px'
-        }}>
-            <h2 style={{
-            fontFamily: FONT,
-            fontSize: '17px',
-            fontWeight: 700,
-            letterSpacing: '-0.3px',
-            color: primaryText
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            delay: 0.5
+          }} style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px'
           }}>
+            <h2 style={{
+              fontFamily: FONT,
+              fontSize: '17px',
+              fontWeight: 700,
+              letterSpacing: '-0.3px',
+              color: primaryText
+            }}>
               Your Trips ✈️
             </h2>
             <button style={{
-            fontFamily: FONT,
-            fontSize: '13px',
-            fontWeight: 500,
-            color: '#FF385C',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer'
-          }}>
+              fontFamily: FONT,
+              fontSize: '13px',
+              fontWeight: 500,
+              color: '#FF385C',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer'
+            }}>
               View all
             </button>
           </motion.div>
 
           <motion.div initial={{
-          opacity: 0,
-          y: 10
-        }} animate={{
-          opacity: 1,
-          y: 0
-        }} transition={{
-          delay: 0.56,
-          duration: 0.45
-        }} style={{
-          background: sectionBg,
-          padding: '14px',
-          borderRadius: '22px',
-          border: `1px solid ${sectionBorder}`
-        }}>
-            <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            marginBottom: '12px',
-            fontFamily: FONT,
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: secondaryText
+            opacity: 0,
+            y: 10
+          }} animate={{
+            opacity: 1,
+            y: 0
+          }} transition={{
+            delay: 0.56,
+            duration: 0.45
+          }} style={{
+            background: sectionBg,
+            padding: '14px',
+            borderRadius: '22px',
+            border: `1px solid ${sectionBorder}`
           }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginBottom: '12px',
+              fontFamily: FONT,
+              fontSize: '11px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: secondaryText
+            }}>
               <History size={13} strokeWidth={1.5} />
               <span>Past Trip</span>
             </div>
 
             <motion.div whileTap={{
-            scale: 0.98
-          }} style={{
-            background: isDark ? '#1C1C1E' : '#FFFFFF',
-            border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
-            borderRadius: '16px',
-            boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.22)' : '0 4px 16px rgba(0,0,0,0.07)',
-            padding: '10px',
-            display: 'flex',
-            gap: '13px',
-            alignItems: 'center'
-          }}>
-              <div style={{
-              width: '88px',
-              height: '78px',
-              borderRadius: '12px',
-              overflow: 'hidden',
-              flexShrink: 0
+              scale: 0.98
+            }} style={{
+              background: isDark ? '#1C1C1E' : '#FFFFFF',
+              border: isDark ? '1px solid rgba(255,255,255,0.07)' : '1px solid rgba(0,0,0,0.06)',
+              borderRadius: '16px',
+              boxShadow: isDark ? '0 4px 16px rgba(0,0,0,0.22)' : '0 4px 16px rgba(0,0,0,0.07)',
+              padding: '10px',
+              display: 'flex',
+              gap: '13px',
+              alignItems: 'center'
             }}>
+              <div style={{
+                width: '88px',
+                height: '78px',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                flexShrink: 0
+              }}>
                 <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=300" alt="Charming Houseboat on Dal Lake" style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
-              }} />
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }} />
               </div>
               <div style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '4px',
-              minWidth: 0
-            }}>
-                <div style={{
+                flex: 1,
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start'
+                flexDirection: 'column',
+                gap: '4px',
+                minWidth: 0
               }}>
-                  <p style={{
-                  fontFamily: FONT,
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: isDark ? '#FFFFFF' : '#1C1C1E',
-                  letterSpacing: '-0.1px',
-                  lineHeight: 1.3,
-                  flex: 1,
-                  marginRight: '8px'
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start'
                 }}>
+                  <p style={{
+                    fontFamily: FONT,
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: isDark ? '#FFFFFF' : '#1C1C1E',
+                    letterSpacing: '-0.1px',
+                    lineHeight: 1.3,
+                    flex: 1,
+                    marginRight: '8px'
+                  }}>
                     Srinagar, Kashmir
                   </p>
                   <span style={{
-                  background: 'rgba(52,199,89,0.12)',
-                  color: '#16A34A',
-                  fontFamily: FONT,
-                  fontSize: '10px',
-                  fontWeight: 600,
-                  borderRadius: '6px',
-                  padding: '3px 8px',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0
-                }}>
+                    background: 'rgba(52,199,89,0.12)',
+                    color: '#16A34A',
+                    fontFamily: FONT,
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    padding: '3px 8px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
+                  }}>
                     Completed
                   </span>
                 </div>
                 <p style={{
-                fontFamily: FONT,
-                fontSize: '12px',
-                color: '#8E8E93',
-                lineHeight: 1.4,
-                overflow: 'hidden',
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis'
-              }}>
+                  fontFamily: FONT,
+                  fontSize: '12px',
+                  color: '#8E8E93',
+                  lineHeight: 1.4,
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis'
+                }}>
                   Charming Houseboat on Dal Lake
                 </p>
                 <p style={{
-                fontFamily: FONT,
-                fontSize: '11px',
-                color: '#AAAAAA',
-                lineHeight: 1.4
-              }}>
+                  fontFamily: FONT,
+                  fontSize: '11px',
+                  color: '#AAAAAA',
+                  lineHeight: 1.4
+                }}>
                   Jan 12 – 15, 2024
                 </p>
                 <p style={{
-                marginTop: '2px'
-              }}>
+                  marginTop: '2px'
+                }}>
                   <span style={{
-                  fontFamily: FONT,
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: isDark ? '#FFFFFF' : '#1C1C1E'
-                }}>₹8,500</span>
+                    fontFamily: FONT,
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    color: isDark ? '#FFFFFF' : '#1C1C1E'
+                  }}>₹8,500</span>
                   <span style={{
-                  fontFamily: FONT,
-                  fontSize: '12px',
-                  color: '#8E8E93'
-                }}>{' / night'}</span>
+                    fontFamily: FONT,
+                    fontSize: '12px',
+                    color: '#8E8E93'
+                  }}>{' / night'}</span>
                 </p>
               </div>
             </motion.div>
@@ -1356,25 +1378,25 @@ export const ProfileScreen: React.FC = () => {
         {/* ── SETTINGS ── */}
         <section>
           <motion.h2 initial={{
-          opacity: 0
-        }} animate={{
-          opacity: 1
-        }} transition={{
-          delay: 0.2
-        }} style={{
-          fontFamily: FONT,
-          fontSize: '17px',
-          fontWeight: 700,
-          letterSpacing: '-0.3px',
-          color: primaryText,
-          marginBottom: '16px'
-        }}>
+            opacity: 0
+          }} animate={{
+            opacity: 1
+          }} transition={{
+            delay: 0.2
+          }} style={{
+            fontFamily: FONT,
+            fontSize: '17px',
+            fontWeight: 700,
+            letterSpacing: '-0.3px',
+            color: primaryText,
+            marginBottom: '16px'
+          }}>
             Settings ⚙️
           </motion.h2>
           <div style={{
-          display: 'flex',
-          flexDirection: 'column'
-        }}>
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
             <DarkModeToggle isDark={isDark} onToggle={() => setIsDark(p => !p)} />
             {SETTINGS_LIST.map((item, i) => <SettingItem key={item.id} item={item} isDark={isDark} delay={0.06 + i * 0.07} />)}
           </div>
@@ -1382,38 +1404,38 @@ export const ProfileScreen: React.FC = () => {
 
         {/* ── LOGOUT ── */}
         <section style={{
-        paddingTop: '8px'
-      }}>
-          <motion.button whileTap={{
-          scale: 0.975
-        }} onClick={() => console.log('Logout')} style={{
-          width: '100%',
-          padding: '16px 24px',
-          borderRadius: '16px',
-          background: isDark ? '#1C1C1E' : '#FFF1F2',
-          border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(239,68,68,0.14)'}`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          cursor: 'pointer',
-          fontFamily: FONT,
-          fontSize: '15px',
-          fontWeight: 600,
-          color: '#EF4444'
+          paddingTop: '8px'
         }}>
-            <LogOut size={18} strokeWidth={2} style={{
+          <motion.button whileTap={{
+            scale: 0.975
+          }} onClick={handleLogout} style={{
+            width: '100%',
+            padding: '16px 24px',
+            borderRadius: '16px',
+            background: isDark ? '#1C1C1E' : '#FFF1F2',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.07)' : 'rgba(239,68,68,0.14)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            fontFamily: FONT,
+            fontSize: '15px',
+            fontWeight: 600,
             color: '#EF4444'
-          }} />
+          }}>
+            <LogOut size={18} strokeWidth={2} style={{
+              color: '#EF4444'
+            }} />
             <span>Log out</span>
           </motion.button>
           <p style={{
-          marginTop: '24px',
-          textAlign: 'center',
-          fontFamily: FONT,
-          fontSize: '12px',
-          color: versionColor
-        }}>
+            marginTop: '24px',
+            textAlign: 'center',
+            fontFamily: FONT,
+            fontSize: '12px',
+            color: versionColor
+          }}>
             SwissChamba Version 2.4.0
           </p>
         </section>
@@ -1421,89 +1443,89 @@ export const ProfileScreen: React.FC = () => {
 
       {/* ── BOTTOM NAV ── */}
       <nav style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      background: navBg,
-      borderTop: `1px solid ${navBorder}`,
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
-      padding: '8px 24px 24px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      zIndex: 50,
-      transition: 'background 0.3s ease, border-color 0.3s ease'
-    }}>
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        background: navBg,
+        borderTop: `1px solid ${navBorder}`,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        padding: '8px 24px 24px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 50,
+        transition: 'background 0.3s ease, border-color 0.3s ease'
+      }}>
         {([{
-        id: 'explore',
-        label: 'Explore'
-      }, {
-        id: 'search',
-        label: 'Search'
-      }, {
-        id: 'trips',
-        label: 'Trips'
-      }, {
-        id: 'profile',
-        label: 'Profile'
-      }] as const).map(({
-        id,
-        label
-      }) => {
-        const isActive = id === 'profile';
-        const iconColor = isActive ? isDark ? '#FFFFFF' : '#1C1C1E' : isDark ? '#636366' : '#8E8E93';
-        return <motion.button key={id} whileTap={{
-          scale: 0.84
-        }} style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '4px',
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: iconColor,
-          transition: 'color 0.3s ease',
-          paddingBottom: '2px'
-        }}>
-              {id === 'explore' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-                </svg>}
-              {id === 'search' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>}
-              {id === 'trips' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
-                  <line x1="9" y1="3" x2="9" y2="18" />
-                  <line x1="15" y1="6" x2="15" y2="21" />
-                </svg>}
-              {id === 'profile' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>}
-              <span style={{
-            fontFamily: FONT,
-            fontSize: '10px',
-            fontWeight: isActive ? 600 : 400,
-            letterSpacing: '0.1px',
-            color: iconColor
+          id: 'explore',
+          label: 'Explore'
+        }, {
+          id: 'search',
+          label: 'Search'
+        }, {
+          id: 'trips',
+          label: 'Trips'
+        }, {
+          id: 'profile',
+          label: 'Profile'
+        }] as const).map(({
+          id,
+          label
+        }) => {
+          const isActive = id === 'profile';
+          const iconColor = isActive ? isDark ? '#FFFFFF' : '#1C1C1E' : isDark ? '#636366' : '#8E8E93';
+          return <motion.button key={id} whileTap={{
+            scale: 0.84
+          }} style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: iconColor,
+            transition: 'color 0.3s ease',
+            paddingBottom: '2px'
           }}>
-                {label}
-              </span>
-              {isActive && <span style={{
-            display: 'block',
-            width: '4px',
-            height: '4px',
-            borderRadius: '50%',
-            background: '#FF385C',
-            marginTop: '1px'
-          }} />}
-            </motion.button>;
-      })}
+            {id === 'explore' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+            </svg>}
+            {id === 'search' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>}
+            {id === 'trips' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
+              <line x1="9" y1="3" x2="9" y2="18" />
+              <line x1="15" y1="6" x2="15" y2="21" />
+            </svg>}
+            {id === 'profile' && <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={isActive ? 2 : 1.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>}
+            <span style={{
+              fontFamily: FONT,
+              fontSize: '10px',
+              fontWeight: isActive ? 600 : 400,
+              letterSpacing: '0.1px',
+              color: iconColor
+            }}>
+              {label}
+            </span>
+            {isActive && <span style={{
+              display: 'block',
+              width: '4px',
+              height: '4px',
+              borderRadius: '50%',
+              background: '#FF385C',
+              marginTop: '1px'
+            }} />}
+          </motion.button>;
+        })}
       </nav>
     </div>;
 };
