@@ -2,7 +2,6 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import contextImage2 from "@/assets/magicpath/context/02-context-image-2.png";
 
 // --- Components ---
 
@@ -49,6 +48,9 @@ export const TravelAuthScreen: React.FC = () => {
   // Constants
   const TAGLINE = "Your next adventure starts here";
   const PRIMARY_ACCENT = "#FF385C";
+  // Unsplash placeholder image URL - will be replaced with user-uploaded property images later
+  const contextImage2 = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80";
+
   return <main className="flex flex-col w-full h-full min-h-screen bg-white text-black font-['Inter',_sans-serif] overflow-x-hidden selection:bg-[#FF385C]/20">
       {/* Hero Section */}
       <section className="relative w-full h-[45%] flex flex-col items-center justify-center overflow-hidden">
