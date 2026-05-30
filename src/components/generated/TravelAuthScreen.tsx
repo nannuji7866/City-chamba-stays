@@ -2,7 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import contextImage2 from "@/assets/magicpath/context/02-context-image-2-a9d1eb600255.png";
+import contextImage2 from "@/assets/magicpath/context/02-context-image-2.png";
 
 // --- Components ---
 
